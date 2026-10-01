@@ -1,5 +1,8 @@
 package com.example.magicfrontiers.core.state
 
+import kotlinx.serialization.Serializable
+
+@Serializable
 sealed interface UnitAiState {
     data object Idle : UnitAiState
     data object Moving : UnitAiState

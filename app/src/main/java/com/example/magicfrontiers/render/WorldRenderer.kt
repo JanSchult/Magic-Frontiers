@@ -17,16 +17,20 @@ object WorldRenderer {
         state: GameState,
         camera: Camera,
         selection: SelectionState,
-        localPlayerId: PlayerId
+        localPlayerId: PlayerId,
+        buildModeTypeId: String? = null,
+        dragPreviewScreenPos: Offset? = null // letzte bekannte Touch-Position
     ) {
         drawMapGrid(scope, state, camera)
         drawResourceNodes(scope, state, camera)
         drawBuildings(scope, state, camera)
         drawUnits(scope, state, camera, selection, localPlayerId)
-        if (selection.isDragging) {
-            drawSelectionRect(scope, selection)
+        if (selection.isDragging) drawSelectionRect(scope, selection)
+        if (buildModeTypeId != null && dragPreviewScreenPos != null) {
+            drawBuildPreview(scope, camera.zoom, dragPreviewScreenPos)
         }
     }
+
 
     private fun drawMapGrid(scope: DrawScope, state: GameState, camera: Camera) {
         for (cell in state.map) {
@@ -132,5 +136,13 @@ object WorldRenderer {
         )
         scope.drawRect(color = Color.White.copy(alpha = 0.15f), topLeft = topLeft, size = size)
         scope.drawRect(color = Color.White, topLeft = topLeft, size = size, style = Stroke(width = 1.5f))
+    }
+    private fun drawBuildPreview(scope: DrawScope, zoom: Float, screenPos: Offset) {
+        val size = zoom * 1.2f
+        scope.drawRect(
+            color = Color(0xFFFFC107).copy(alpha = 0.4f),
+            topLeft = Offset(screenPos.x - size / 2, screenPos.y - size / 2),
+            size = androidx.compose.ui.geometry.Size(size, size)
+        )
     }
 }

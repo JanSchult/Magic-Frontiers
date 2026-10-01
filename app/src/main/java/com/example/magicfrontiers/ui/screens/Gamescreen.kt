@@ -1,5 +1,6 @@
 package com.example.magicfrontiers.ui.screens
 
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Box
@@ -13,12 +14,18 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.magicfrontiers.core.model.PlayerId
 import com.example.magicfrontiers.render.WorldRenderer
+import com.example.magicfrontiers.ui.componenten.HudOverlay
 import com.example.magicfrontiers.viewmodel.GameViewModel
+import org.koin.androidx.compose.koinViewModel
 
 @Composable
 fun GameScreen(viewModel: GameViewModel = koinViewModel()) {
     val gameState by viewModel.gameState.collectAsStateWithLifecycle()
     val selection by viewModel.selection.collectAsStateWithLifecycle()
+
+    val buildMode by viewModel.buildMode.collectAsStateWithLifecycle()
+    val selectedBuildingId by viewModel.selectedBuildingId.collectAsStateWithLifecycle()
+
 
     Box(modifier = Modifier.fillMaxSize()) {
         Canvas(
@@ -49,7 +56,11 @@ fun GameScreen(viewModel: GameViewModel = koinViewModel()) {
         HudOverlay(
             gameState = gameState,
             selection = selection,
+            buildMode = buildMode,
+            selectedBuildingId = selectedBuildingId,
             commandDispatcher = viewModel.commandDispatcher,
+            onEnterBuildMode = { viewModel.enterBuildMode(it) },
+            onCancelBuildMode = { viewModel.cancelBuildMode() },
             modifier = Modifier.align(Alignment.BottomCenter)
         )
     }
