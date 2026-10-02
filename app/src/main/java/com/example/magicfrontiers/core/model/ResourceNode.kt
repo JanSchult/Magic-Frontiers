@@ -1,5 +1,7 @@
 package com.example.magicfrontiers.core.model
+import kotlinx.serialization.Serializable
 
+@Serializable
 data class ResourceNode(
     val id: String,
     val type: ResourceType,

@@ -1,6 +1,8 @@
 package com.example.magicfrontiers.core.model
 
+import kotlinx.serialization.Serializable
 
+@Serializable
 data class UnitStats(
     val maxHealth: Int,
     val damage: Int,

@@ -1,6 +1,9 @@
 package com.example.magicfrontiers.core.model
 
 import com.example.magicfrontiers.core.state.UnitAiState
+import kotlinx.serialization.Serializable
+
+@Serializable
 
 // core/model/Unit.kt — Name "Unit" kollidiert mit kotlin.Unit, daher GameUnit
 data class GameUnit(

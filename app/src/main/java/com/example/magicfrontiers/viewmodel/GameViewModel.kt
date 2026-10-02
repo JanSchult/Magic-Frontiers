@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.magicfrontiers.ai.AiController
 import com.example.magicfrontiers.core.engine.GameLoop
+import com.example.magicfrontiers.core.engine.SaveStatus
 import com.example.magicfrontiers.core.engine.Simulation
 import com.example.magicfrontiers.core.model.BuildingId
 import com.example.magicfrontiers.core.model.GameState
@@ -11,13 +12,19 @@ import com.example.magicfrontiers.core.model.PlayerId
 import com.example.magicfrontiers.input.CommandDispatcher
 import com.example.magicfrontiers.input.SelectionController
 import com.example.magicfrontiers.input.SelectionState
+import com.example.magicfrontiers.persistence.SaveGameRepository
 import com.example.magicfrontiers.render.Camera
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.isActive
+import kotlinx.coroutines.launch
+import kotlin.time.Duration.Companion.milliseconds
 
 class GameViewModel(
     initialState: GameState,
+    private val saveGameRepository: SaveGameRepository,
     private val localPlayerId: PlayerId = PlayerId("p1")
 ) : ViewModel() {
 
@@ -41,6 +48,8 @@ class GameViewModel(
 
     private val _selectedBuildingId = MutableStateFlow<BuildingId?>(null)
     val selectedBuildingId: StateFlow<BuildingId?> = _selectedBuildingId.asStateFlow()
+    private val _saveStatus = MutableStateFlow<SaveStatus>(SaveStatus.Idle)
+    val saveStatus: StateFlow<SaveStatus> = _saveStatus.asStateFlow()
 
     // ui/GameViewModel.kt — Ergänzung
     private val aiController = AiController(
@@ -49,8 +58,12 @@ class GameViewModel(
         enemyPlayerId = localPlayerId
     )
     init {
-        gameLoop.start()
-    }
+        viewModelScope.launch {
+            while (isActive) {
+                delay(60_000L.milliseconds)
+                saveGame("autosave")
+            }
+        }    }
 
     fun onDragStart(position: androidx.compose.ui.geometry.Offset) {
         _selection.value = _selection.value.copy(dragStart = position, dragCurrent = position)
@@ -124,6 +137,16 @@ class GameViewModel(
         _selectedBuildingId.value = hit?.id
         if (hit != null) _selection.value = SelectionState() // Gebäude- und Einheitenauswahl schließen sich aus
     }
+    fun saveGame(slot: String = "autosave") {
+        viewModelScope.launch {
+            _saveStatus.value = SaveStatus.Saving
+            val result = saveGameRepository.save(gameState.value, slot)
+            _saveStatus.value = if (result.isSuccess) SaveStatus.Saved else SaveStatus.Error
+        }
+    }
+    suspend fun loadGame(slot: String = "autosave"): GameState? =
+        saveGameRepository.load(slot).getOrNull()
+
     override fun onCleared() {
         gameLoop.stop()
     }

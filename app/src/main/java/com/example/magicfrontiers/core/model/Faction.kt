@@ -1,5 +1,7 @@
 package com.example.magicfrontiers.core.model
+import kotlinx.serialization.Serializable
 
+@Serializable
 // core/model/Faction.kt
 data class Faction(
     val id: FactionId,
