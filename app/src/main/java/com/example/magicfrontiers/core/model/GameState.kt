@@ -12,5 +12,7 @@ data class GameState(
     val buildings: Map<BuildingId, Building>,
     val resourceNodes: Map<String, ResourceNode>,
     val playerResources: Map<PlayerId, Map<ResourceType, Int>>,
-    val factions: Map<PlayerId, FactionId>
+    val factions: Map<PlayerId, FactionId>,
+    val visibilityByPlayer: Map<PlayerId, Set<CellKey>> = emptyMap() // neu
+
 )

@@ -21,7 +21,7 @@ class SaveGameRepository(private val context: Context) {
     suspend fun save(state: GameState, slot: String = "autosave"): Result<Unit> =
         withContext(Dispatchers.IO) {
             runCatching {
-                val content = json.encodeToString(state)
+                val content = json.encodeToString(SaveFile(state = state))
                 saveFile(slot).writeText(content)
             }
         }
@@ -31,7 +31,11 @@ class SaveGameRepository(private val context: Context) {
             runCatching {
                 val file = saveFile(slot)
                 require(file.exists()) { "Kein Spielstand im Slot '$slot' gefunden" }
-                json.decodeFromString(file.readText())
+                val saveFile = json.decodeFromString<SaveFile>(file.readText())
+                if (saveFile.schemaVersion != SaveFile.CURRENT_SCHEMA_VERSION) {
+                    // Migrationspunkt für spätere Versionen
+                }
+                saveFile.state
             }
         }
 

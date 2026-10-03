@@ -1,5 +1,6 @@
 package com.example.magicfrontiers.core.engine
 
+import com.example.magicfrontiers.core.model.CellKey
 import com.example.magicfrontiers.core.model.GameState
 import com.example.magicfrontiers.core.model.UnitId
 import com.example.magicfrontiers.core.state.UnitAiState
@@ -24,13 +25,23 @@ class CombatSystem : GameSystem {
             val target = units[targetId]
 
             if (target == null) {
-                // Ziel existiert nicht mehr (tot/entfernt) -> Angreifer zurück in Idle
+                updatedUnits[unit.id] = updatedUnits[unit.id]!!.copy(targetUnitId = null, state = UnitAiState.Idle)
+                continue
+            }
+// Sichtbarkeitsprüfung: Ziel muss für den Angreifer-Besitzer sichtbar sein (eigene Ziele immer ok)
+            val attackerVisibility = state.visibilityByPlayer[unit.ownerId] ?: emptySet()
+            val targetCell = CellKey(target.position.x.toInt(), target.position.y.toInt())
+            val canSeeTarget = target.ownerId == unit.ownerId || targetCell in attackerVisibility
+
+            if (!canSeeTarget) {
                 updatedUnits[unit.id] = updatedUnits[unit.id]!!.copy(
                     targetUnitId = null,
-                    state = UnitAiState.Idle
+                    state = UnitAiState.Idle,
+                    moveTarget = null
                 )
                 continue
             }
+
 
             val distance = (target.position - unit.position).length()
 

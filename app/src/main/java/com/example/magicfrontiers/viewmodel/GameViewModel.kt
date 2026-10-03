@@ -1,9 +1,11 @@
 package com.example.magicfrontiers.viewmodel
 
+import androidx.compose.ui.geometry.Offset
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.magicfrontiers.ai.AiController
 import com.example.magicfrontiers.core.engine.GameLoop
+import com.example.magicfrontiers.core.engine.InitialGameStateFactory
 import com.example.magicfrontiers.core.engine.SaveStatus
 import com.example.magicfrontiers.core.engine.Simulation
 import com.example.magicfrontiers.core.model.BuildingId
@@ -28,7 +30,7 @@ class GameViewModel(
     private val localPlayerId: PlayerId = PlayerId("p1")
 ) : ViewModel() {
 
-    private val simulation = Simulation(initialState)
+    private val simulation = Simulation(InitialGameStateFactory.create())
     // GameViewModel.kt — init anpassen
     private val gameLoop = GameLoop(
         simulation = simulation,
@@ -51,7 +53,9 @@ class GameViewModel(
     private val _saveStatus = MutableStateFlow<SaveStatus>(SaveStatus.Idle)
     val saveStatus: StateFlow<SaveStatus> = _saveStatus.asStateFlow()
 
-    // ui/GameViewModel.kt — Ergänzung
+    private val _lastPointerScreenPos = MutableStateFlow<Offset?>(null)
+
+
     private val aiController = AiController(
         simulation = simulation,
         aiPlayerId = PlayerId("p2"),
@@ -65,10 +69,15 @@ class GameViewModel(
             }
         }    }
 
-    fun onDragStart(position: androidx.compose.ui.geometry.Offset) {
+    fun onDragStart(position: Offset) {
         _selection.value = _selection.value.copy(dragStart = position, dragCurrent = position)
     }
-
+    fun clearDragState() {
+        _selection.value = _selection.value.copy(dragStart = null, dragCurrent = null)
+    }
+    fun onPointerMove(position: Offset) {
+        if (_buildMode.value != null) _lastPointerScreenPos.value = position
+    }
     fun onDrag(position: androidx.compose.ui.geometry.Offset) {
         _selection.value = _selection.value.copy(dragCurrent = position)
     }
@@ -150,4 +159,6 @@ class GameViewModel(
     override fun onCleared() {
         gameLoop.stop()
     }
+    fun pauseLoop() = gameLoop.stop()
+    fun resumeLoop() = gameLoop.start()
 }

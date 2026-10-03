@@ -12,13 +12,17 @@ class MovementSystem(
     private val separationStrength: Float = 0.4f
 ) : GameSystem {
 
+    private val grid = SpatialGrid(cellSize = separationRadius * 2f)
+
+
     override fun update(state: GameState, deltaMs: Long): GameState {
         val deltaSeconds = deltaMs / 1000f
         val unitsList = state.units.values.toList()
         if (unitsList.isEmpty()) return state
 
-        val updatedUnits = state.units.toMutableMap()
+        grid.build(unitsList) // einmal pro Tick aufbauen statt pro Einheit zu iterieren
 
+        val updatedUnits = state.units.toMutableMap()
         for (unit in unitsList) {
             val target = unit.moveTarget ?: continue
             if (unit.state != UnitAiState.Moving) continue
@@ -27,13 +31,10 @@ class MovementSystem(
             val distance = toTarget.length()
 
             if (distance <= arrivalThreshold) {
-                // Ziel erreicht
-                updatedUnits[unit.id] = unit.copy(
-                    moveTarget = null,
-                    state = UnitAiState.Idle
-                )
+                updatedUnits[unit.id] = unit.copy(moveTarget = null, state = UnitAiState.Idle)
                 continue
             }
+
 
             val direction = Vector2(toTarget.x / distance, toTarget.y / distance)
             val separation = computeSeparation(unit, unitsList)
@@ -62,7 +63,8 @@ class MovementSystem(
         var pushX = 0f
         var pushY = 0f
 
-        for (other in allUnits) {
+        // Nutzt das Grid für die Performanz, greift nur auf nahegelegene Einheiten zu
+        for (other in grid.nearby(unit.position)) {
             if (other.id == unit.id) continue
             val diff = unit.position - other.position
             val dist = diff.length()

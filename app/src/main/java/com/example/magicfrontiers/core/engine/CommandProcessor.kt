@@ -6,11 +6,13 @@ import com.example.magicfrontiers.core.model.Command
 import com.example.magicfrontiers.core.model.GameState
 import com.example.magicfrontiers.core.model.ProductionOrder
 import com.example.magicfrontiers.core.model.ResourceType
+import com.example.magicfrontiers.core.model.SimulationEvent
 import com.example.magicfrontiers.core.state.UnitAiState
 
 class CommandProcessor : GameSystem {
 
     private var pendingCommands: List<Command> = emptyList()
+    val pendingEvents = mutableListOf<SimulationEvent>()
 
     fun enqueue(commands: List<Command>) {
         pendingCommands = pendingCommands + commands
@@ -76,8 +78,10 @@ class CommandProcessor : GameSystem {
 
                 val hasEnergy = (resources[ResourceType.ENERGY] ?: 0) >= blueprint.costEnergy
                 val hasMaterial = (resources[ResourceType.MATERIAL] ?: 0) >= blueprint.costMaterial
-                if (!hasEnergy || !hasMaterial) return state // nicht genug Ressourcen -> Befehl verworfen
-
+                if (!hasEnergy || !hasMaterial) {
+                    pendingEvents += SimulationEvent.CommandRejected("Nicht genug Ressourcen")
+                    return state
+                }
                 val updatedResources = resources.toMutableMap().apply {
                     this[ResourceType.ENERGY] = (this[ResourceType.ENERGY] ?: 0) - blueprint.costEnergy
                     this[ResourceType.MATERIAL] = (this[ResourceType.MATERIAL] ?: 0) - blueprint.costMaterial

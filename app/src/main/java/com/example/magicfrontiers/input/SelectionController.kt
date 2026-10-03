@@ -1,6 +1,7 @@
 package com.example.magicfrontiers.input
 
 import androidx.compose.ui.geometry.Offset
+import com.example.magicfrontiers.core.model.CellKey
 import com.example.magicfrontiers.core.model.GameState
 import com.example.magicfrontiers.core.model.PlayerId
 import com.example.magicfrontiers.core.model.UnitId
@@ -63,7 +64,13 @@ class SelectionController(
         tapPosition: Offset,
         tapRadiusPx: Float = 48f
     ): UnitId? {
+        val myVisibleCells = state.visibilityByPlayer[localPlayerId] ?: emptySet()
+
         return state.units.values
+            .filter { unit ->
+        unit.ownerId == localPlayerId ||
+                CellKey(unit.position.x.toInt(), unit.position.y.toInt()) in myVisibleCells
+    }
             .map { it to camera.worldToScreen(it.position) }
             .filter { (_, screenPos) ->
                 val dx = screenPos.x - tapPosition.x

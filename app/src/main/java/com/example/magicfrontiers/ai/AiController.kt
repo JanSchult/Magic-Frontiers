@@ -9,6 +9,7 @@ import com.example.magicfrontiers.core.model.PlayerId
 import com.example.magicfrontiers.core.model.ResourceType
 import com.example.magicfrontiers.core.model.Vector2
 import com.example.magicfrontiers.core.model.Building
+import com.example.magicfrontiers.core.model.CellKey
 import com.example.magicfrontiers.core.model.GameUnit
 import com.example.magicfrontiers.core.state.UnitAiState
 
@@ -74,14 +75,17 @@ class AiController(
         val myUnits = state.units.values.filter { it.ownerId == aiPlayerId && it.state == UnitAiState.Idle }
         if (myUnits.size < 4) return // erst angreifen, wenn genug Einheiten idle/bereit stehen
 
-        val enemyTarget = state.units.values.firstOrNull { it.ownerId == enemyPlayerId }
-            ?: state.buildings.values.firstOrNull { it.ownerId == enemyPlayerId }
+        val myVisibility = state.visibilityByPlayer[aiPlayerId] ?: emptySet()
 
-        val targetPosition = when (enemyTarget) {
-            is GameUnit -> enemyTarget.position
-            is Building -> enemyTarget.position
-            else -> return
+        val visibleEnemyUnit = state.units.values.firstOrNull {
+            it.ownerId == enemyPlayerId && CellKey(it.position.x.toInt(), it.position.y.toInt()) in myVisibility
         }
+        val visibleEnemyBuilding = state.buildings.values.firstOrNull {
+            it.ownerId == enemyPlayerId && CellKey(it.position.x.toInt(), it.position.y.toInt()) in myVisibility
+        }
+
+        val targetPosition = visibleEnemyUnit?.position ?: visibleEnemyBuilding?.position ?: return
+
 
         simulation.submitCommand(Command.Move(myUnits.map { it.id }, targetPosition))
     }

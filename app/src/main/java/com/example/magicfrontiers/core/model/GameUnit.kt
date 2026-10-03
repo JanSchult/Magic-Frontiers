@@ -17,6 +17,7 @@ data class GameUnit(
     val state: UnitAiState = UnitAiState.Idle,
     val targetUnitId: UnitId? = null,
     val moveTarget: Vector2? = null,
+    val pathWaypoints: List<Vector2> = emptyList(),
     val attackCooldownRemainingMs: Long = 0L,
     val gatherTargetNodeId: String? = null,
     val carriedResourceType: ResourceType? = null,

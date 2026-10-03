@@ -4,6 +4,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
+import com.example.magicfrontiers.core.model.CellKey
 import com.example.magicfrontiers.core.model.GameState
 import com.example.magicfrontiers.core.model.PlayerId
 import com.example.magicfrontiers.core.model.ResourceType
@@ -21,24 +22,25 @@ object WorldRenderer {
         buildModeTypeId: String? = null,
         dragPreviewScreenPos: Offset? = null // letzte bekannte Touch-Position
     ) {
-        drawMapGrid(scope, state, camera)
+        val visibleCells = state.visibilityByPlayer[localPlayerId] ?: emptySet()
+        drawMapGrid(scope, state, camera, visibleCells)
         drawResourceNodes(scope, state, camera)
-        drawBuildings(scope, state, camera)
-        drawUnits(scope, state, camera, selection, localPlayerId)
+        drawBuildings(scope, state, camera, localPlayerId, visibleCells)
+        drawUnits(scope, state, camera, selection, localPlayerId, visibleCells)
         if (selection.isDragging) drawSelectionRect(scope, selection)
         if (buildModeTypeId != null && dragPreviewScreenPos != null) {
             drawBuildPreview(scope, camera.zoom, dragPreviewScreenPos)
         }
     }
 
-
-    private fun drawMapGrid(scope: DrawScope, state: GameState, camera: Camera) {
+    private fun drawMapGrid(scope: DrawScope, state: GameState, camera: Camera, visibleCells: Set<CellKey>) {
         for (cell in state.map) {
-            if (!cell.isExplored) continue // Fog of War kommt in Schritt 8, hier schon vorbereitet
+            if (!cell.isExplored) continue
+            val isVisible = CellKey(cell.x, cell.y) in visibleCells
             val screenPos = camera.worldToScreen(Vector2(cell.x.toFloat(), cell.y.toFloat()))
             val color = if (cell.isWalkable) Color(0xFF2A3B2A) else Color(0xFF3B2A2A)
             scope.drawRect(
-                color = color.copy(alpha = if (cell.isVisible) 1f else 0.5f),
+                color = color.copy(alpha = if (isVisible) 1f else 0.5f),
                 topLeft = Offset(screenPos.x, screenPos.y),
                 size = androidx.compose.ui.geometry.Size(camera.zoom, camera.zoom)
             )
@@ -57,8 +59,20 @@ object WorldRenderer {
         }
     }
 
-    private fun drawBuildings(scope: DrawScope, state: GameState, camera: Camera) {
+    private fun drawBuildings(
+        scope: DrawScope,
+        state: GameState,
+        camera: Camera,
+        localPlayerId: PlayerId,
+        visibleCells: Set<CellKey>
+    ) {
         for (building in state.buildings.values) {
+            val cellKey = CellKey(building.position.x.toInt(), building.position.y.toInt())
+
+            // Gebaeude ist sichtbar, wenn es dem eigenen Spieler gehoert oder auf einem sichtbaren Feld steht
+            val isVisibleToPlayer = building.ownerId == localPlayerId || cellKey in visibleCells
+            if (!isVisibleToPlayer) continue
+
             val screenPos = camera.worldToScreen(building.position)
             val size = camera.zoom * 1.2f
             val baseColor = if (building.isConstructed) Color(0xFF616161) else Color(0xFF616161).copy(alpha = 0.5f)
@@ -73,9 +87,15 @@ object WorldRenderer {
             if (!building.isConstructed) {
                 drawProgressBar(scope, screenPos, size, building.constructionProgress, Color(0xFFFFC107))
             }
-            // Health-Bar nur wenn beschädigt
+            // Health-Bar nur wenn beschaedigt
             else if (building.currentHealth < building.maxHealth) {
-                drawProgressBar(scope, screenPos, size, building.currentHealth.toFloat() / building.maxHealth, Color(0xFF4CAF50))
+                drawProgressBar(
+                    scope,
+                    screenPos,
+                    size,
+                    building.currentHealth.toFloat() / building.maxHealth,
+                    Color(0xFF4CAF50)
+                )
             }
         }
     }
@@ -85,9 +105,14 @@ object WorldRenderer {
         state: GameState,
         camera: Camera,
         selection: SelectionState,
-        localPlayerId: PlayerId
+        localPlayerId: PlayerId,
+        visibleCells: Set<CellKey>
     ) {
         for (unit in state.units.values) {
+            val cellKey = CellKey(unit.position.x.toInt(), unit.position.y.toInt())
+            val isVisibleToPlayer = unit.ownerId == localPlayerId || cellKey in visibleCells
+            if (!isVisibleToPlayer) continue
+
             val screenPos = camera.worldToScreen(unit.position)
             val radius = camera.zoom * 0.25f
 
@@ -137,6 +162,7 @@ object WorldRenderer {
         scope.drawRect(color = Color.White.copy(alpha = 0.15f), topLeft = topLeft, size = size)
         scope.drawRect(color = Color.White, topLeft = topLeft, size = size, style = Stroke(width = 1.5f))
     }
+
     private fun drawBuildPreview(scope: DrawScope, zoom: Float, screenPos: Offset) {
         val size = zoom * 1.2f
         scope.drawRect(
