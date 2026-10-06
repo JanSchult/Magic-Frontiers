@@ -1,5 +1,7 @@
-package com.example.magicfrontiers.core.engine
+package com.example.magicfrontiers.core.engine.system
 
+import com.example.magicfrontiers.core.engine.Pathfinder
+import com.example.magicfrontiers.core.engine.TechEffects
 import com.example.magicfrontiers.core.model.CellKey
 import com.example.magicfrontiers.core.model.GameState
 import com.example.magicfrontiers.core.model.UnitId
@@ -47,8 +49,10 @@ class CombatSystem : GameSystem {
 
             if (distance > unit.stats.attackRange) {
                 // Ziel außer Reichweite -> annähern lassen (MovementSystem übernimmt im nächsten Tick)
+                val path = Pathfinder.findPath(state, unit.position, target.position)
                 updatedUnits[unit.id] = updatedUnits[unit.id]!!.copy(
-                    moveTarget = target.position,
+                    pathWaypoints = path,
+                    moveTarget = path.firstOrNull() ?: target.position,
                     state = UnitAiState.Moving
                 )
                 continue
@@ -56,7 +60,9 @@ class CombatSystem : GameSystem {
 
             // In Reichweite: angreifen, falls Cooldown abgelaufen
             if (unit.attackCooldownRemainingMs <= 0L) {
-                val damage = (unit.stats.damage - target.stats.armor).coerceAtLeast(1)
+                val baseDamage = TechEffects.effectiveDamage(unit, state)
+                val targetArmor = TechEffects.effectiveArmor(target, state)
+                val damage = (baseDamage - targetArmor).coerceAtLeast(1)
                 damageEvents += targetId to damage
 
                 updatedUnits[unit.id] = updatedUnits[unit.id]!!.copy(

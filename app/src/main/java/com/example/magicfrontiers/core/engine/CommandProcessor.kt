@@ -1,12 +1,18 @@
 package com.example.magicfrontiers.core.engine
 
+import com.example.magicfrontiers.core.engine.catalog.BuildingCatalog
+import com.example.magicfrontiers.core.engine.catalog.TechCatalog
+import com.example.magicfrontiers.core.engine.catalog.UnitCatalog
+import com.example.magicfrontiers.core.engine.system.GameSystem
 import com.example.magicfrontiers.core.model.Building
 import com.example.magicfrontiers.core.model.BuildingId
 import com.example.magicfrontiers.core.model.Command
 import com.example.magicfrontiers.core.model.GameState
 import com.example.magicfrontiers.core.model.ProductionOrder
+import com.example.magicfrontiers.core.model.ResearchOrder
 import com.example.magicfrontiers.core.model.ResourceType
 import com.example.magicfrontiers.core.model.SimulationEvent
+import com.example.magicfrontiers.core.model.TechEffect
 import com.example.magicfrontiers.core.state.UnitAiState
 
 class CommandProcessor : GameSystem {
@@ -34,8 +40,11 @@ class CommandProcessor : GameSystem {
                 val updatedUnits = state.units.toMutableMap()
                 for (unitId in command.unitIds) {
                     val unit = updatedUnits[unitId] ?: continue
+                    val path = Pathfinder.findPath(state, unit.position, command.target)
+
                     updatedUnits[unitId] = unit.copy(
-                        moveTarget = command.target,
+                        pathWaypoints = path,
+                        moveTarget = path.firstOrNull() ?: command.target,
                         state = UnitAiState.Moving,
                         targetUnitId = null
                     )
@@ -74,6 +83,19 @@ class CommandProcessor : GameSystem {
                 if (!building.isConstructed) return state
 
                 val blueprint = UnitCatalog.getOrNull(command.unitTypeId) ?: return state
+                // Prüfen, ob Einheit eine Freischaltung durch Tech benötigt
+                val requiresUnlock = TechCatalog.all().any {
+                    it.effect is TechEffect.UnlockUnit && (it.effect as TechEffect.UnlockUnit).unitTypeId == blueprint.typeId
+                }
+                if (requiresUnlock) {
+                    val researched = state.researchedTechs[building.ownerId] ?: emptySet()
+                    val isUnlocked = TechCatalog.all().any {
+                        it.effect is TechEffect.UnlockUnit &&
+                                (it.effect as TechEffect.UnlockUnit).unitTypeId == blueprint.typeId &&
+                                it.id in researched
+                    }
+                    if (!isUnlocked) return state // nicht freigeschaltet -> Befehl verworfen
+                }
                 val resources = state.playerResources[building.ownerId] ?: return state
 
                 val hasEnergy = (resources[ResourceType.ENERGY] ?: 0) >= blueprint.costEnergy
@@ -145,6 +167,37 @@ class CommandProcessor : GameSystem {
                     )
                 }
                 state.copy(units = updatedUnits)
+            }
+            is Command.ResearchTech -> {
+                val building = state.buildings[command.buildingId] ?: return state
+                if (!building.isConstructed) return state
+                if (building.researchQueue.isNotEmpty()) return state // nur eine Forschung gleichzeitig pro Gebäude
+
+                val blueprint = TechCatalog.getOrNull(command.techId) ?: return state
+                val alreadyResearched = state.researchedTechs[building.ownerId] ?: emptySet()
+                if (blueprint.id in alreadyResearched) return state // schon erforscht
+
+                val missingPrereqs = blueprint.requiresTechIds.any { it !in alreadyResearched }
+                if (missingPrereqs) return state
+
+                val resources = state.playerResources[building.ownerId] ?: return state
+                val hasEnergy = (resources[ResourceType.ENERGY] ?: 0) >= blueprint.costEnergy
+                val hasMaterial = (resources[ResourceType.MATERIAL] ?: 0) >= blueprint.costMaterial
+                if (!hasEnergy || !hasMaterial) return state
+
+                val updatedResources = resources.toMutableMap().apply {
+                    this[ResourceType.ENERGY] = (this[ResourceType.ENERGY] ?: 0) - blueprint.costEnergy
+                    this[ResourceType.MATERIAL] = (this[ResourceType.MATERIAL] ?: 0) - blueprint.costMaterial
+                }
+
+                val order =
+                    ResearchOrder(techId = blueprint.id, durationMs = blueprint.researchDurationMs)
+                val updatedBuilding = building.copy(researchQueue = listOf(order))
+
+                state.copy(
+                    buildings = state.buildings + (building.id to updatedBuilding),
+                    playerResources = state.playerResources + (building.ownerId to updatedResources)
+                )
             }
         }
     }

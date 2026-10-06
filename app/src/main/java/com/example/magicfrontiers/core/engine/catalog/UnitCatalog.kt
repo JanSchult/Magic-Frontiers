@@ -1,4 +1,4 @@
-package com.example.magicfrontiers.core.engine
+package com.example.magicfrontiers.core.engine.catalog
 
 import com.example.magicfrontiers.core.model.UnitBlueprint
 import com.example.magicfrontiers.core.model.UnitRole
@@ -25,7 +25,14 @@ object UnitCatalog {
             typeId = "archer",
             displayName = "Bogenschütze",
             role = UnitRole.RANGED,
-            stats = UnitStats(maxHealth = 45, damage = 14, attackRange = 4f, attackCooldownMs = 1200L, moveSpeed = 2.4f, visionRange = 7f),
+            stats = UnitStats(
+                maxHealth = 45,
+                damage = 14,
+                attackRange = 4f,
+                attackCooldownMs = 1200L,
+                moveSpeed = 2.4f,
+                visionRange = 7f
+            ),
             costEnergy = 40, costMaterial = 25,
             buildDurationMs = 6000L
         )

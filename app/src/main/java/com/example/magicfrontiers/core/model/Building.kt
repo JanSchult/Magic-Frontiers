@@ -12,5 +12,7 @@ data class Building(
     val maxHealth: Int,
     val productionQueue: List<ProductionOrder> = emptyList(),
     val isConstructed: Boolean = true,
-    val constructionProgress: Float = 1f // 0..1
+    val constructionProgress: Float = 1f ,
+    val researchQueue: List<ResearchOrder> = emptyList() // neu
+
 )

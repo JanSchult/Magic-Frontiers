@@ -32,7 +32,7 @@ fun HudOverlay(
             buildMode != null -> BuildModeBar(buildMode, onCancelBuildMode)
             selectedBuildingId != null -> {
                 val building = gameState.buildings[selectedBuildingId]
-                if (building != null) BuildingPanel(building, commandDispatcher)
+                if (building != null) BuildingPanel(building, gameState, commandDispatcher)
             }
             selection.selectedUnitIds.isNotEmpty() -> SelectionPanel(gameState, selection, commandDispatcher)
             else -> BuildMenuBar(onEnterBuildMode)

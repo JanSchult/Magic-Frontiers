@@ -1,5 +1,13 @@
 package com.example.magicfrontiers.core.engine
 
+import com.example.magicfrontiers.core.engine.system.CombatSystem
+import com.example.magicfrontiers.core.engine.system.ExploredMapSystem
+import com.example.magicfrontiers.core.engine.system.GameSystem
+import com.example.magicfrontiers.core.engine.system.GatheringSystem
+import com.example.magicfrontiers.core.engine.system.MovementSystem
+import com.example.magicfrontiers.core.engine.system.ProductionSystem
+import com.example.magicfrontiers.core.engine.system.ResearchSystem
+import com.example.magicfrontiers.core.engine.system.VisionSystem
 import com.example.magicfrontiers.core.model.Command
 import com.example.magicfrontiers.core.model.GameState
 import com.example.magicfrontiers.core.model.PlayerId
@@ -25,6 +33,7 @@ class Simulation(initialState: GameState) {
         CombatSystem(),
         ProductionSystem(),
         GatheringSystem(),
+        ResearchSystem(),
         VisionSystem(localPlayerId = PlayerId),
         ExploredMapSystem(localPlayerId = PlayerId("p1"))
 

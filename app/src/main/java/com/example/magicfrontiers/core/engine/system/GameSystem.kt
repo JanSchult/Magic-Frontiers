@@ -1,4 +1,4 @@
-package com.example.magicfrontiers.core.engine
+package com.example.magicfrontiers.core.engine.system
 
 import com.example.magicfrontiers.core.model.GameState
 

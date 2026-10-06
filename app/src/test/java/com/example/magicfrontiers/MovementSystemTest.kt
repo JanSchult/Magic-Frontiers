@@ -1,6 +1,6 @@
 package com.example.magicfrontiers
 
-import com.example.magicfrontiers.core.engine.MovementSystem
+import com.example.magicfrontiers.core.engine.system.MovementSystem
 import com.example.magicfrontiers.core.model.GameState
 import com.example.magicfrontiers.core.model.GameUnit
 import com.example.magicfrontiers.core.model.PlayerId

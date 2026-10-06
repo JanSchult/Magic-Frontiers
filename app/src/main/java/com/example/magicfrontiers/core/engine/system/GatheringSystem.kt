@@ -1,5 +1,6 @@
-package com.example.magicfrontiers.core.engine
+package com.example.magicfrontiers.core.engine.system
 
+import com.example.magicfrontiers.core.engine.TechEffects
 import com.example.magicfrontiers.core.model.Building
 import com.example.magicfrontiers.core.model.GameState
 import com.example.magicfrontiers.core.model.GameUnit
@@ -39,8 +40,8 @@ class GatheringSystem(
                         ))
                         continue
                     }
-
-                    val gatherAmount = ((unit.stats.gatherRatePerSecond * deltaMs) / 1000f).toInt().coerceAtLeast(1)
+                    val multiplier = TechEffects.gatherRateMultiplier(unit, state)
+                    val gatherAmount = ((unit.stats.gatherRatePerSecond *multiplier *deltaMs) / 1000f).toInt().coerceAtLeast(1)
                     val spaceLeft = unit.stats.gatherCapacity - unit.carriedResourceAmount
                     val actualGathered = minOf(gatherAmount, spaceLeft, node.remainingAmount)
 

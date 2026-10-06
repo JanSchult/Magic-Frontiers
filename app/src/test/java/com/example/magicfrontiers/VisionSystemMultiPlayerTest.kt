@@ -1,6 +1,6 @@
 package com.example.magicfrontiers
 
-import com.example.magicfrontiers.core.engine.VisionSystem
+import com.example.magicfrontiers.core.engine.system.VisionSystem
 import com.example.magicfrontiers.core.model.CellKey
 import com.example.magicfrontiers.core.model.GameState
 import com.example.magicfrontiers.core.model.GameUnit

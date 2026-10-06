@@ -1,5 +1,6 @@
-package com.example.magicfrontiers.core.engine
+package com.example.magicfrontiers.core.engine.system
 
+import com.example.magicfrontiers.core.engine.SpatialGrid
 import com.example.magicfrontiers.core.model.GameState
 import com.example.magicfrontiers.core.model.GameUnit
 import com.example.magicfrontiers.core.model.Vector2
@@ -20,9 +21,9 @@ class MovementSystem(
         val unitsList = state.units.values.toList()
         if (unitsList.isEmpty()) return state
 
-        grid.build(unitsList) // einmal pro Tick aufbauen statt pro Einheit zu iterieren
-
+        grid.build(unitsList)
         val updatedUnits = state.units.toMutableMap()
+
         for (unit in unitsList) {
             val target = unit.moveTarget ?: continue
             if (unit.state != UnitAiState.Moving) continue
@@ -31,24 +32,36 @@ class MovementSystem(
             val distance = toTarget.length()
 
             if (distance <= arrivalThreshold) {
-                updatedUnits[unit.id] = unit.copy(moveTarget = null, state = UnitAiState.Idle)
+                val remainingWaypoints = unit.pathWaypoints.drop(1)
+                if (remainingWaypoints.isEmpty()) {
+                    // Pfad komplett abgelaufen -> Ziel erreicht
+                    updatedUnits[unit.id] = unit.copy(
+                        moveTarget = null,
+                        pathWaypoints = emptyList(),
+                        state = UnitAiState.Idle
+                    )
+                } else {
+                    // nächsten Wegpunkt ansteuern
+                    updatedUnits[unit.id] = unit.copy(
+                        moveTarget = remainingWaypoints.first(),
+                        pathWaypoints = remainingWaypoints
+                    )
+                }
                 continue
             }
 
-
             val direction = Vector2(toTarget.x / distance, toTarget.y / distance)
             val separation = computeSeparation(unit, unitsList)
-
             val combinedX = direction.x + separation.x * separationStrength
             val combinedY = direction.y + separation.y * separationStrength
-            val combinedLength = max(Vector2(combinedX, combinedY).length(), 0.0001f)
+            val combinedLength = kotlin.math.max(Vector2(combinedX, combinedY).length(), 0.0001f)
 
             val moveX = (combinedX / combinedLength) * unit.stats.moveSpeed * deltaSeconds
             val moveY = (combinedY / combinedLength) * unit.stats.moveSpeed * deltaSeconds
 
-            val newPosition = Vector2(unit.position.x + moveX, unit.position.y + moveY)
-
-            updatedUnits[unit.id] = unit.copy(position = newPosition)
+            updatedUnits[unit.id] = unit.copy(
+                position = Vector2(unit.position.x + moveX, unit.position.y + moveY)
+            )
         }
 
         return state.copy(units = updatedUnits)

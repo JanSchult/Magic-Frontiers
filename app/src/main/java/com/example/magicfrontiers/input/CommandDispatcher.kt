@@ -33,4 +33,7 @@ class CommandDispatcher(
     fun placeBuilding(typeId: String, position: Vector2) {
         simulation.submitCommand(Command.PlaceBuilding(localPlayerId, typeId, position))
     }
+    fun researchTech(buildingId: BuildingId, techId: String) {
+        simulation.submitCommand(Command.ResearchTech(buildingId, techId))
+    }
 }

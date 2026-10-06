@@ -1,9 +1,10 @@
-package com.example.magicfrontiers.core.engine
+package com.example.magicfrontiers.core.engine.system
 
 import com.example.magicfrontiers.core.model.CellKey
 import com.example.magicfrontiers.core.model.GameState
 import com.example.magicfrontiers.core.model.PlayerId
 import com.example.magicfrontiers.core.model.Vector2
+import kotlin.collections.plusAssign
 import kotlin.math.ceil
 import kotlin.math.floor
 import kotlin.math.sqrt
@@ -48,8 +49,7 @@ class VisionSystem(
                     val dx = x - position.x
                     val dy = y - position.y
                     if (sqrt(dx * dx + dy * dy) <= range) {
-                        result += CellKey(x, y)
-                    }
+                        result += CellKey(x, y)                    }
                 }
             }
         }

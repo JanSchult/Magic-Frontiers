@@ -1,5 +1,7 @@
-package com.example.magicfrontiers.core.engine
+package com.example.magicfrontiers.core.engine.system
 
+import com.example.magicfrontiers.core.engine.catalog.BuildingCatalog
+import com.example.magicfrontiers.core.engine.catalog.UnitCatalog
 import com.example.magicfrontiers.core.model.GameState
 import com.example.magicfrontiers.core.model.GameUnit
 import com.example.magicfrontiers.core.model.UnitId

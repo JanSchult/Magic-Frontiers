@@ -1,6 +1,6 @@
 package com.example.magicfrontiers
 
-import com.example.magicfrontiers.core.engine.ProductionSystem
+import com.example.magicfrontiers.core.engine.system.ProductionSystem
 import com.example.magicfrontiers.core.model.Building
 import com.example.magicfrontiers.core.model.BuildingId
 import com.example.magicfrontiers.core.model.GameState

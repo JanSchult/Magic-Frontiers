@@ -8,4 +8,6 @@ sealed interface Command {
     data class ProduceUnit(val buildingId: BuildingId, val unitTypeId: String) : Command
     data class PlaceBuilding(val playerId: PlayerId, val typeId: String, val position: Vector2) : Command
     data class Gather(val unitIds: List<UnitId>, val nodeId: String) : Command
+    data class ResearchTech(val buildingId: BuildingId, val techId: String) : Command
+
 }

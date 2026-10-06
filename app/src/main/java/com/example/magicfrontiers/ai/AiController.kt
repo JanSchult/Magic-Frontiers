@@ -1,16 +1,14 @@
 package com.example.magicfrontiers.ai
 
-import com.example.magicfrontiers.core.engine.BuildingCatalog
+import com.example.magicfrontiers.core.engine.catalog.BuildingCatalog
 import com.example.magicfrontiers.core.engine.Simulation
-import com.example.magicfrontiers.core.engine.UnitCatalog
+import com.example.magicfrontiers.core.engine.catalog.UnitCatalog
 import com.example.magicfrontiers.core.model.Command
 import com.example.magicfrontiers.core.model.GameState
 import com.example.magicfrontiers.core.model.PlayerId
 import com.example.magicfrontiers.core.model.ResourceType
 import com.example.magicfrontiers.core.model.Vector2
-import com.example.magicfrontiers.core.model.Building
 import com.example.magicfrontiers.core.model.CellKey
-import com.example.magicfrontiers.core.model.GameUnit
 import com.example.magicfrontiers.core.state.UnitAiState
 
 class AiController(
