@@ -35,6 +35,17 @@ object UnitCatalog {
             ),
             costEnergy = 40, costMaterial = 25,
             buildDurationMs = 6000L
+        ),
+        UnitBlueprint(
+            typeId = "worker",
+            displayName = "Arbeiter",
+            role = UnitRole.SUPPORT,
+            stats = UnitStats(
+                maxHealth = 40, damage = 0, attackRange = 0f, attackCooldownMs = 0L,
+                moveSpeed = 2.6f, visionRange = 5f,
+                canGather = true, gatherCapacity = 10, gatherRatePerSecond = 4
+            ),
+            costEnergy = 25, costMaterial = 10, buildDurationMs = 4000L
         )
         // weitere Einheitentypen ergänzbar
     ).associateBy { it.typeId }

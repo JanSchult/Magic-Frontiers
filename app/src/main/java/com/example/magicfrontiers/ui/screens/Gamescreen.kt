@@ -14,6 +14,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.onSizeChanged
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
@@ -54,6 +55,7 @@ fun GameScreen(
         Canvas(
             modifier = Modifier
                 .fillMaxSize()
+                .onSizeChanged { viewModel.onCanvasSizeKnown(it.width.toFloat(), it.height.toFloat()) }
                 .pointerInput(Unit) {
                     awaitEachGesture {
                         val down = awaitFirstDown()

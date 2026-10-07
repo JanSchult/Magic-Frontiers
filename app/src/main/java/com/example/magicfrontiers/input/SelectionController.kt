@@ -4,6 +4,7 @@ import androidx.compose.ui.geometry.Offset
 import com.example.magicfrontiers.core.model.CellKey
 import com.example.magicfrontiers.core.model.GameState
 import com.example.magicfrontiers.core.model.PlayerId
+import com.example.magicfrontiers.core.model.ResourceNode
 import com.example.magicfrontiers.core.model.UnitId
 import com.example.magicfrontiers.render.Camera
 import kotlin.math.max
@@ -84,4 +85,10 @@ class SelectionController(
             }
             ?.first?.id
     }
+    fun findResourceNodeAtTap(state: GameState, camera: Camera, tapPosition: Offset, tapRadiusPx: Float = 48f): ResourceNode? =
+        state.resourceNodes.values
+            .map { it to camera.worldToScreen(it.position) }
+            .filter { (_, p) -> (p.x - tapPosition.x).let { it * it } + (p.y - tapPosition.y).let { it * it } <= tapRadiusPx * tapRadiusPx }
+            .minByOrNull { (_, p) -> (p.x - tapPosition.x).let { it * it } + (p.y - tapPosition.y).let { it * it } }
+            ?.first
 }

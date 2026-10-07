@@ -25,4 +25,9 @@ class Camera(
         offsetX += focusScreenX - newScreenFocus.x
         offsetY += focusScreenY - newScreenFocus.y
     }
+    fun fitAndCenter(worldPos: Vector2, canvasWidth: Float, canvasHeight: Float, visibleWorldUnits: Float = 14f) {
+        zoom = minOf(canvasWidth, canvasHeight) / visibleWorldUnits
+        offsetX = canvasWidth / 2f - worldPos.x * zoom
+        offsetY = canvasHeight / 2f - worldPos.y * zoom
+    }
 }

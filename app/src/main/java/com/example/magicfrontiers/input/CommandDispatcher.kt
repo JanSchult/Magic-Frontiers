@@ -36,4 +36,8 @@ class CommandDispatcher(
     fun researchTech(buildingId: BuildingId, techId: String) {
         simulation.submitCommand(Command.ResearchTech(buildingId, techId))
     }
+    fun gather(unitIds: Set<UnitId>, nodeId: String) {
+        if (unitIds.isEmpty()) return
+        simulation.submitCommand(Command.Gather(unitIds.toList(), nodeId))
+    }
 }

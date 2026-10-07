@@ -11,6 +11,7 @@ import com.example.magicfrontiers.core.engine.Simulation
 import com.example.magicfrontiers.core.model.BuildingId
 import com.example.magicfrontiers.core.model.GameState
 import com.example.magicfrontiers.core.model.PlayerId
+import com.example.magicfrontiers.core.model.Vector2
 import com.example.magicfrontiers.input.CommandDispatcher
 import com.example.magicfrontiers.input.SelectionController
 import com.example.magicfrontiers.input.SelectionState
@@ -32,10 +33,11 @@ class GameViewModel(
 ) : ViewModel() {
 
     private val simulation = Simulation(InitialGameStateFactory.create(
-        playerFactionId = "faction1",
-        aiFactionId = "faction2",
+        playerFactionId = "ember_dominion",
+        aiFactionId = "verdant_concord",
     ))
     // GameViewModel.kt — init anpassen
+
     private val gameLoop = GameLoop(
         simulation = simulation,
         scope = viewModelScope,
@@ -43,6 +45,7 @@ class GameViewModel(
     )
     val camera = Camera()
     val gameState: StateFlow<GameState> = simulation.state
+    private var hasCenteredCamera = false
 
     private val _selection = MutableStateFlow(SelectionState())
     val selection: StateFlow<SelectionState> = _selection.asStateFlow()
@@ -113,6 +116,13 @@ class GameViewModel(
             return
         }
 
+        val ownUnitTapped = selectionController.selectUnitAtTap(gameState.value, camera, position)
+        if (ownUnitTapped != null) {
+            _selection.value = SelectionState(selectedUnitIds = setOf(ownUnitTapped))
+            _selectedBuildingId.value = null
+            return
+        }
+
         val selected = _selection.value.selectedUnitIds
         if (selected.isEmpty()) {
             selectBuildingAt(position) // kein Unit-Befehl aktiv -> evtl. Gebäude anklicken
@@ -128,6 +138,14 @@ class GameViewModel(
             }
         }
 
+        // 1. Prüfen, ob ein Ressourcen-Knoten angetippt wurde
+        val tappedNode = selectionController.findResourceNodeAtTap(gameState.value, camera, position)
+        if (tappedNode != null) {
+            commandDispatcher.gather(selected, tappedNode.id)
+            return
+        }
+
+        // 2. Ansonsten normale Bewegung ausführen
         val worldPos = camera.screenToWorld(position.x, position.y)
         commandDispatcher.moveSelected(selected, worldPos)
     }
@@ -135,10 +153,20 @@ class GameViewModel(
         _buildMode.value = typeId
         _selection.value = SelectionState() // Einheitenauswahl aufheben, Baumodus hat Vorrang
     }
-
+    fun onCanvasSizeKnown(widthPx: Float, heightPx: Float) {
+        if (hasCenteredCamera) return
+        val myUnit = gameState.value.units.values.firstOrNull { it.ownerId == localPlayerId }
+        val center = myUnit?.position ?: Vector2(
+            gameState.value.mapWidth / 2f,
+            gameState.value.mapHeight / 2f
+        )
+        camera.fitAndCenter(center, widthPx, heightPx)
+        hasCenteredCamera = true
+    }
     fun cancelBuildMode() {
         _buildMode.value = null
     }
+
 
     fun selectBuildingAt(position: Offset) {
         val worldPos = camera.screenToWorld(position.x, position.y)

@@ -10,7 +10,7 @@ object BuildingCatalog {
             maxHealth = 400,
             costEnergy = 80, costMaterial = 60,
             constructionDurationMs = 10_000L,
-            producesUnitTypeIds = listOf("scout", "archer")
+            producesUnitTypeIds = listOf("scout", "archer","worker")
         ),
 
         BuildingBlueprint(

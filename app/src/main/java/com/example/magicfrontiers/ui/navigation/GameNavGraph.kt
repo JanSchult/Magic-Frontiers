@@ -13,10 +13,12 @@ import com.example.magicfrontiers.ui.screens.GameScreen
 import com.example.magicfrontiers.ui.screens.MainMenuScreen
 
 @Composable
-fun GameNavGraph(navController: NavHostController = rememberNavController()) {
+fun GameNavGraph(modifier: Modifier = Modifier,
+    navController: NavHostController = rememberNavController()) {
     NavHost(
         navController = navController,
-        startDestination = Screen.MainMenu
+        startDestination = Screen.MainMenu,
+        modifier= modifier
     ) {
 
         composable<Screen.MainMenu> {
