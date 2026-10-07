@@ -14,5 +14,6 @@ data class GameState(
     val playerResources: Map<PlayerId, Map<ResourceType, Int>>,
     val factions: Map<PlayerId, FactionId>,
     val visibilityByPlayer: Map<PlayerId, Set<CellKey>> = emptyMap(),
-    val researchedTechs: Map<PlayerId, Set<String>> = emptyMap()
+    val researchedTechs: Map<PlayerId, Set<String>> = emptyMap(),
+    val controlPoints: Map<String, ControlPoint> = emptyMap()
 )

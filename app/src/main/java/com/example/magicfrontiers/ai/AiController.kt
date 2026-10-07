@@ -27,6 +27,7 @@ class AiController(
         decideEconomy(state)
         decideMilitary(state)
         decideAttack(state)
+        decideControlPoints(state)
     }
 
     private fun decideEconomy(state: GameState) {
@@ -92,5 +93,19 @@ class AiController(
         // Fallback, falls KI noch kein Gebäude besitzt (Spielstart)
         return state.units.values.firstOrNull { it.ownerId == aiPlayerId }?.position
             ?: Vector2(state.mapWidth / 2f, state.mapHeight / 2f)
+    }
+    private fun decideControlPoints(state: GameState) {
+        val uncontrolledPoint = state.controlPoints.values
+            .firstOrNull { it.controllingPlayerId != aiPlayerId }
+
+        val myVisibility = state.visibilityByPlayer[aiPlayerId] ?: emptySet()
+        val visiblePoint = uncontrolledPoint?.takeIf {
+            CellKey(it.position.x.toInt(), it.position.y.toInt()) in myVisibility
+        } ?: return
+
+        val idleUnits = state.units.values.filter { it.ownerId == aiPlayerId && it.state == UnitAiState.Idle }
+        if (idleUnits.size < 2) return // nicht zu viele Einheiten gleichzeitig abziehen
+
+        simulation.submitCommand(Command.Move(idleUnits.take(2).map { it.id }, visiblePoint.position))
     }
 }

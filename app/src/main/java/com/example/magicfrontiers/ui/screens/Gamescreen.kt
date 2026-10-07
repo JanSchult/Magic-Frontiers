@@ -18,14 +18,20 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.example.magicfrontiers.core.engine.catalog.FactionCatalog
 import com.example.magicfrontiers.core.model.PlayerId
 import com.example.magicfrontiers.render.WorldRenderer
 import com.example.magicfrontiers.ui.componenten.HudOverlay
 import com.example.magicfrontiers.viewmodel.GameViewModel
-import org.koin.androidx.compose.koinViewModel
-
+import com.example.magicfrontiers.viewmodel.GameViewModelFactory
+import androidx.lifecycle.viewmodel.compose.viewModel
 @Composable
-fun GameScreen(viewModel: GameViewModel = koinViewModel()) {
+fun GameScreen(
+    playerFactionId: String,
+    viewModel: GameViewModel = viewModel(
+        factory = GameViewModelFactory(playerFactionId = playerFactionId, aiFactionId = pickAiFaction(playerFactionId))
+    )
+) {
     val gameState by viewModel.gameState.collectAsStateWithLifecycle()
     val selection by viewModel.selection.collectAsStateWithLifecycle()
 
@@ -93,3 +99,5 @@ fun GameScreen(viewModel: GameViewModel = koinViewModel()) {
         )
     }
 }
+private fun pickAiFaction(playerFactionId: String): String =
+    FactionCatalog.all().firstOrNull { it.id.value != playerFactionId }?.id?.value ?: playerFactionId

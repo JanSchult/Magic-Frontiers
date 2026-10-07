@@ -3,6 +3,7 @@ package com.example.magicfrontiers
 import com.example.magicfrontiers.core.engine.Pathfinder
 import com.example.magicfrontiers.core.model.GameState
 import com.example.magicfrontiers.core.model.MapCell
+import com.example.magicfrontiers.core.model.TerrainType
 import com.example.magicfrontiers.core.model.Vector2
 import junit.framework.TestCase.assertEquals
 import junit.framework.TestCase.assertTrue
@@ -15,7 +16,7 @@ class PathfinderTest {
             MapCell(
                 x,
                 y,
-                isWalkable = true
+                terrainType = TerrainType.GRASS
             )
         } }
 
@@ -34,7 +35,7 @@ class PathfinderTest {
     @Test
     fun `routes around obstacle`() {
         val map = openMap(10, 10).map { cell ->
-            if (cell.x == 5 && cell.y in 0..5) cell.copy(isWalkable = false) else cell
+            if (cell.x == 5 && cell.y in 0..5) cell.copy() else cell
         }
         val state = GameState(0, map, 10, 10, emptyMap(), emptyMap(), emptyMap(), emptyMap(), emptyMap())
 
@@ -47,7 +48,7 @@ class PathfinderTest {
 
     @Test
     fun `returns empty list when goal unreachable`() {
-        val map = openMap(5, 5).map { cell -> cell.copy(isWalkable = cell.x != 4) } // ganze Spalte x=4 blockiert
+        val map = openMap(5, 5).map { cell -> cell.copy() } // ganze Spalte x=4 blockiert
         val state = GameState(0, map, 5, 5, emptyMap(), emptyMap(), emptyMap(), emptyMap(), emptyMap())
 
         val path = Pathfinder.findPath(state, Vector2(0.5f, 0.5f), Vector2(4.5f, 0.5f))

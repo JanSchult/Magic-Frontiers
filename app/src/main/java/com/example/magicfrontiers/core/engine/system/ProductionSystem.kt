@@ -6,6 +6,7 @@ import com.example.magicfrontiers.core.model.GameState
 import com.example.magicfrontiers.core.model.GameUnit
 import com.example.magicfrontiers.core.model.UnitId
 import com.example.magicfrontiers.core.model.Vector2
+import com.example.magicfrontiers.core.engine.catalog.FactionCatalog
 
 class ProductionSystem(
     private val spawnOffset: Float = 1.5f
@@ -42,6 +43,11 @@ class ProductionSystem(
             if (newProgress >= 1f) {
                 // Einheit fertig -> spawnen, aus Queue entfernen
                 val blueprint = UnitCatalog.getOrNull(currentOrder.unitTypeId) ?: continue
+                val factionId = state.factions[building.ownerId]
+                val healthMultiplier = factionId?.let { FactionCatalog.get(it.value).traits.unitHealthMultiplier } ?: 1f
+                val scaledMaxHealth = (blueprint.stats.maxHealth * healthMultiplier).toInt()
+
+
                 val spawnPosition = Vector2(
                     building.position.x + spawnOffset,
                     building.position.y
@@ -53,7 +59,7 @@ class ProductionSystem(
                     role = blueprint.role,
                     position = spawnPosition,
                     currentHealth = blueprint.stats.maxHealth,
-                    stats = blueprint.stats
+                    stats = blueprint.stats.copy(maxHealth = scaledMaxHealth)
                 )
                 units = units + (newUnit.id to newUnit)
 

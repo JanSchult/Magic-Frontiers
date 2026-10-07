@@ -22,6 +22,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
+import kotlin.math.hypot
 import kotlin.time.Duration.Companion.milliseconds
 
 class GameViewModel(
@@ -30,7 +31,10 @@ class GameViewModel(
     private val localPlayerId: PlayerId = PlayerId("p1")
 ) : ViewModel() {
 
-    private val simulation = Simulation(InitialGameStateFactory.create())
+    private val simulation = Simulation(InitialGameStateFactory.create(
+        playerFactionId = "faction1",
+        aiFactionId = "faction2",
+    ))
     // GameViewModel.kt — init anpassen
     private val gameLoop = GameLoop(
         simulation = simulation,
@@ -78,7 +82,7 @@ class GameViewModel(
     fun onPointerMove(position: Offset) {
         if (_buildMode.value != null) _lastPointerScreenPos.value = position
     }
-    fun onDrag(position: androidx.compose.ui.geometry.Offset) {
+    fun onDrag(position: Offset) {
         _selection.value = _selection.value.copy(dragCurrent = position)
     }
 
@@ -87,7 +91,7 @@ class GameViewModel(
         val start = current.dragStart ?: return
         val end = current.dragCurrent ?: return
 
-        val dragDistance = kotlin.math.hypot(end.x - start.x, end.y - start.y)
+        val dragDistance = hypot(end.x - start.x, end.y - start.y)
         val newSelection = if (dragDistance < 12f) {
             // Zu kleine Bewegung -> als Tap behandeln
             val tapped = selectionController.selectUnitAtTap(gameState.value, camera, end)
@@ -100,7 +104,7 @@ class GameViewModel(
     }
 
     /** Tap auf Karte während Einheiten ausgewählt sind -> Move oder Attack, je nach Ziel. */
-    fun onCommandTap(position: androidx.compose.ui.geometry.Offset) {
+    fun onCommandTap(position: Offset) {
         val buildType = _buildMode.value
         if (buildType != null) {
             val worldPos = camera.screenToWorld(position.x, position.y)
@@ -136,7 +140,7 @@ class GameViewModel(
         _buildMode.value = null
     }
 
-    fun selectBuildingAt(position: androidx.compose.ui.geometry.Offset) {
+    fun selectBuildingAt(position: Offset) {
         val worldPos = camera.screenToWorld(position.x, position.y)
         val hit = gameState.value.buildings.values
             .filter { it.ownerId == localPlayerId }

@@ -1,6 +1,7 @@
 package com.example.magicfrontiers.core.engine
 
 import com.example.magicfrontiers.core.engine.catalog.BuildingCatalog
+import com.example.magicfrontiers.core.engine.catalog.FactionCatalog
 import com.example.magicfrontiers.core.engine.catalog.TechCatalog
 import com.example.magicfrontiers.core.engine.catalog.UnitCatalog
 import com.example.magicfrontiers.core.engine.system.GameSystem
@@ -83,6 +84,13 @@ class CommandProcessor : GameSystem {
                 if (!building.isConstructed) return state
 
                 val blueprint = UnitCatalog.getOrNull(command.unitTypeId) ?: return state
+                val factionId = state.factions[building.ownerId] ?: return state
+                val faction = FactionCatalog.get(factionId.value)
+                val costMultiplier = faction.traits.resourceCostMultiplier
+
+                val actualEnergyCost = (blueprint.costEnergy * costMultiplier).toInt()
+                val actualMaterialCost = (blueprint.costMaterial * costMultiplier).toInt()
+
                 // Prüfen, ob Einheit eine Freischaltung durch Tech benötigt
                 val requiresUnlock = TechCatalog.all().any {
                     it.effect is TechEffect.UnlockUnit && (it.effect as TechEffect.UnlockUnit).unitTypeId == blueprint.typeId
@@ -97,6 +105,8 @@ class CommandProcessor : GameSystem {
                     if (!isUnlocked) return state // nicht freigeschaltet -> Befehl verworfen
                 }
                 val resources = state.playerResources[building.ownerId] ?: return state
+                if ((resources[ResourceType.ENERGY] ?: 0) < actualEnergyCost) return state
+                if ((resources[ResourceType.MATERIAL] ?: 0) < actualMaterialCost) return state
 
                 val hasEnergy = (resources[ResourceType.ENERGY] ?: 0) >= blueprint.costEnergy
                 val hasMaterial = (resources[ResourceType.MATERIAL] ?: 0) >= blueprint.costMaterial
@@ -105,8 +115,8 @@ class CommandProcessor : GameSystem {
                     return state
                 }
                 val updatedResources = resources.toMutableMap().apply {
-                    this[ResourceType.ENERGY] = (this[ResourceType.ENERGY] ?: 0) - blueprint.costEnergy
-                    this[ResourceType.MATERIAL] = (this[ResourceType.MATERIAL] ?: 0) - blueprint.costMaterial
+                    this[ResourceType.ENERGY] = (this[ResourceType.ENERGY] ?: 0) - actualEnergyCost
+                    this[ResourceType.MATERIAL] = (this[ResourceType.MATERIAL] ?: 0) - actualMaterialCost
                 }
 
                 val order = ProductionOrder(unitTypeId = blueprint.typeId, durationMs = blueprint.buildDurationMs)

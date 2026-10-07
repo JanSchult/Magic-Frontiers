@@ -9,5 +9,6 @@ data class Faction(
     val description: String,
     val unitTypeIds: List<String>,
     val buildingTypeIds: List<String>,
-    val techTreeId: String
+    val techTreeId: String,
+    val traits: FactionTraits
 )

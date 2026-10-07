@@ -6,7 +6,10 @@ import kotlinx.serialization.Serializable
 data class MapCell(
     val x: Int,
     val y: Int,
-    val isWalkable: Boolean,
+    val terrainType: TerrainType,
     val isExplored: Boolean = false,  // Fog of War: bereits aufgedeckt
     val occupantUnitId: UnitId? = null
-)
+){
+    val isWalkable: Boolean get() = terrainType != TerrainType.WATER
+
+}
